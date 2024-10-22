@@ -5,8 +5,7 @@
 ## 使用方法
 
 1. 去 [deepseek](https://platform.deepseek.com/) 注册账号，获取 api_key
-2. 将 api_key 填写到 deepseek_config.ini 文件中
-   示例：
+2. 将 api_key 填写到 deepseek_config.ini 文件中，示例：
 
 ```
 [API]
