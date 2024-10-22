@@ -24,6 +24,12 @@ pip install -r requirements.txt
 python todo.py
 ```
 
+5. 打包成 exe 文件
+
+```
+pyinstaller --onefile --windowed todo.py
+```
+
 ## 运行截图
 
 ![运行截图](./screenshot.png)
