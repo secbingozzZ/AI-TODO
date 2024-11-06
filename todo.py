@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QListWidget, QListWidgetItem, QCheckBox,
     QLabel, QMessageBox
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSettings
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSettings, QSharedMemory
 
 
 class DecomposeThread(QThread):
@@ -347,21 +347,42 @@ class AITodoApp(QMainWindow):
         self.setWindowFlag(Qt.WindowStaysOnTopHint, self.pin_button.isChecked())
         self.show()
 
-    def _find_parent_task(self, target_task, tasks=None):
+    def _find_parent_task(self, target_task, tasks=None, visited=None):
         # 查找父任务
         tasks = tasks or self.tasks
+        visited = visited or set()  # 初始化已访问任务的集合
+
         for task in tasks:
+            if id(task) in visited:  # 如果任务已经访问过，跳过
+                continue
+            visited.add(id(task))  # 将当前任务标记为已访问
+
             if target_task in task.get('subtasks', []):
                 return task
-            parent = self._find_parent_task(target_task, task.get('subtasks', []))
+            parent = self._find_parent_task(target_task, task.get('subtasks', []), visited)
             if parent:
                 return parent
         return None
 
 
 if __name__ == "__main__":
-    # 程序入口，启动应用
+    # 创建一个共享内存对象，用于检测是否已有实例在运行
+    shared_memory = QSharedMemory("AITodoAppInstance")
+    
+    # 初始化 QApplication
     app = QApplication(sys.argv)
-    window = AITodoApp()
-    window.show()
-    sys.exit(app.exec_())
+    
+    if not shared_memory.create(1):  # 如果共享内存已存在，说明已有实例在运行
+        # 弹出提示框，告知用户窗口已存在
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Information)
+        msg_box.setWindowTitle("提示")
+        msg_box.setText("窗口已存在")
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.exec_()
+        sys.exit(0)  # 退出程序
+    else:
+        # 程序入口，启动应用
+        window = AITodoApp()
+        window.show()
+        sys.exit(app.exec_())
